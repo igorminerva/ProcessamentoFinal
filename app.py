@@ -18,12 +18,71 @@ st.set_page_config(
     layout="wide"
 )
 
-# Initialize session state for model history
+# Initialize session state for model history and navigation
 if 'model_history' not in st.session_state:
     st.session_state.model_history = []
 
 if 'current_model' not in st.session_state:
     st.session_state.current_model = None
+
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = "main"
+
+def create_navbar():
+    """Create a top navigation bar"""
+    st.markdown(
+        """
+        <style>
+        .navbar {
+            display: flex;
+            justify-content: center;
+            background-color: #f0f2f6;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .navbar a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #31333F;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .navbar a:hover {
+            background-color: #4e8cff;
+            color: white;
+        }
+        .navbar a.active {
+            background-color: #4e8cff;
+            color: white;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    # Create navbar with columns
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("🏠 Main", use_container_width=True, 
+                    type="primary" if st.session_state.current_page == "main" else "secondary"):
+            st.session_state.current_page = "main"
+            st.rerun()
+    
+    with col2:
+        if st.button("📊 History", use_container_width=True,
+                    type="primary" if st.session_state.current_page == "history" else "secondary"):
+            st.session_state.current_page = "history"
+            st.rerun()
+    
+    with col3:
+        if st.button("📈 Visualizations", use_container_width=True,
+                    type="primary" if st.session_state.current_page == "visualizations" else "secondary"):
+            st.session_state.current_page = "visualizations"
+            st.rerun()
 
 @st.cache_data
 def load_data():
@@ -590,13 +649,18 @@ def visualizations_page():
             else:
                 st.success("No missing values found in the dataset!")
 
-# Page navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to:", ["🏠 Main", "📊 History", "📈 Visualizations"], key="navigation")
+# Main app logic
+def main():
+    # Display navbar
+    create_navbar()
+    
+    # Page routing based on navbar selection
+    if st.session_state.current_page == "main":
+        main_page()
+    elif st.session_state.current_page == "history":
+        history_page()
+    elif st.session_state.current_page == "visualizations":
+        visualizations_page()
 
-if page == "🏠 Main":
-    main_page()
-elif page == "📊 History":
-    history_page()
-else:
-    visualizations_page()
+if __name__ == "__main__":
+    main()
