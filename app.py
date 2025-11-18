@@ -11,14 +11,34 @@ import os
 import json
 from datetime import datetime
 
-# Set page configuration
+# Set page configuration with nature theme
 st.set_page_config(
-    page_title="RandomForest GHG Emissions Predictor",
-    page_icon="🌳",
-    layout="wide"
+    page_title="Forest GHG Emissions Predictor",
+    page_icon="🌲",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Initialize session state for model history and navigation
+# Load CSS from external file
+def load_css():
+    try:
+        with open('assets/style.css', 'r') as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.warning("CSS file not found. Using default styling.")
+
+# Apply CSS
+load_css()
+
+# Fix font issues for matplotlib
+plt.rcParams['font.family'] = 'DejaVu Sans'
+plt.rcParams['axes.unicode_minus'] = False
+
+# Set matplotlib style to normal (remove dark theme config)
+plt.style.use('default')
+sns.set_palette(["#2d5016", "#4a7c3a", "#8db596", "#a3c585", "#8b7355"])
+
+# Initialize session state
 if 'model_history' not in st.session_state:
     st.session_state.model_history = []
 
@@ -28,61 +48,77 @@ if 'current_model' not in st.session_state:
 if 'current_page' not in st.session_state:
     st.session_state.current_page = "main"
 
+if 'language' not in st.session_state:
+    st.session_state.language = "en"
+
+# Load translations
+@st.cache_data
+def load_translations():
+    """Load translation files"""
+    try:
+        with open('translations/en.json', 'r', encoding='utf-8') as f:
+            en_translations = json.load(f)
+        with open('translations/pt.json', 'r', encoding='utf-8') as f:
+            pt_translations = json.load(f)
+        return {"en": en_translations, "pt": pt_translations}
+    except FileNotFoundError:
+        st.error("Translation files not found.")
+        return {}
+
+TRANSLATIONS = load_translations()
+
+def get_text(category, key):
+    """Helper function to get text in current language"""
+    try:
+        return TRANSLATIONS[st.session_state.language][category][key]
+    except KeyError:
+        return f"[{category}.{key}]"
+
 def create_navbar():
-    """Create a top navigation bar"""
-    st.markdown(
-        """
-        <style>
-        .navbar {
-            display: flex;
-            justify-content: center;
-            background-color: #f0f2f6;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        .navbar a {
-            margin: 0 15px;
-            text-decoration: none;
-            color: #31333F;
-            font-weight: bold;
-            padding: 8px 16px;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-        .navbar a:hover {
-            background-color: #4e8cff;
-            color: white;
-        }
-        .navbar a.active {
-            background-color: #4e8cff;
-            color: white;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    # Create navbar with columns
-    col1, col2, col3 = st.columns(3)
+    """Create a top navigation bar with language switcher"""
+    col1, col2 = st.columns([3, 1])
     
     with col1:
-        if st.button("🏠 Main", use_container_width=True, 
-                    type="primary" if st.session_state.current_page == "main" else "secondary"):
-            st.session_state.current_page = "main"
-            st.rerun()
+        nav_col1, nav_col2, nav_col3 = st.columns(3)
+        
+        with nav_col1:
+            btn_style = "primary" if st.session_state.current_page == "main" else "secondary"
+            if st.button("🌲 " + get_text("navigation", "main"), width='stretch', type=btn_style):
+                st.session_state.current_page = "main"
+                st.rerun()
+        
+        with nav_col2:
+            btn_style = "primary" if st.session_state.current_page == "history" else "secondary"
+            if st.button("📊 " + get_text("navigation", "history"), width='stretch', type=btn_style):
+                st.session_state.current_page = "history"
+                st.rerun()
+        
+        with nav_col3:
+            btn_style = "primary" if st.session_state.current_page == "visualizations" else "secondary"
+            if st.button("📈 " + get_text("navigation", "visualizations"), width='stretch', type=btn_style):
+                st.session_state.current_page = "visualizations"
+                st.rerun()
     
     with col2:
-        if st.button("📊 History", use_container_width=True,
-                    type="primary" if st.session_state.current_page == "history" else "secondary"):
-            st.session_state.current_page = "history"
-            st.rerun()
-    
-    with col3:
-        if st.button("📈 Visualizations", use_container_width=True,
-                    type="primary" if st.session_state.current_page == "visualizations" else "secondary"):
-            st.session_state.current_page = "visualizations"
-            st.rerun()
+        st.markdown('<div class="language-switcher">', unsafe_allow_html=True)
+        if st.session_state.language == "en":
+            if st.button("🇧🇷 PT", width='stretch', help="Switch to Portuguese"):
+                st.session_state.language = "pt"
+                st.rerun()
+        else:
+            if st.button("🇺🇸 EN", width='stretch', help="Mudar para Inglês"):
+                st.session_state.language = "en"
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+def create_header(title, description):
+    """Create a styled header section"""
+    st.markdown(f"""
+    <div class="main-header">
+        <h1>{title}</h1>
+        <p>{description}</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 @st.cache_data
 def load_data():
@@ -92,7 +128,7 @@ def load_data():
         ixi_df = pd.read_csv("data/ExioML_factor_accounting_IxI.csv")
         return pxp_df, ixi_df
     except FileNotFoundError:
-        st.error("Data files not found. Please make sure the CSV files are in the 'data' folder.")
+        st.error(get_text("common", "data_files_not_found"))
         return None, None
 
 def preprocess_data(data):
@@ -105,46 +141,52 @@ def preprocess_data(data):
         'Energy Carrier Net Total [TJ]'
     ]
     
-    # Log transformation
     for column in columns_to_transform:
         if column in data_log.columns:
             data_log[column] = np.log1p(data_log[column])
     
     return data_log
 
+def safe_dataframe_display(df, max_rows=1000):
+    """Safely display dataframe by converting object dtypes to string"""
+    display_df = df.copy()
+    
+    for col in display_df.columns:
+        if display_df[col].dtype == 'object':
+            display_df[col] = display_df[col].astype(str)
+    
+    if len(display_df) > max_rows:
+        st.info(f"Showing first {max_rows} rows of {len(display_df)}")
+        display_df = display_df.head(max_rows)
+    
+    return display_df
+
 def train_and_evaluate_model(data_log, hyperparams, dataset_name):
     """Train RandomForest model with given hyperparameters"""
-    # Prepare features and target
     features = data_log.drop(columns=['region', 'sector', 'GHG emissions [kg CO2 eq.]'])
     target = data_log['GHG emissions [kg CO2 eq.]']
     
-    # Split the data
     X_train, X_test, y_train, y_test = train_test_split(
         features, target, test_size=0.2, random_state=42
     )
     
-    # Train model
     rf_regressor = RandomForestRegressor(**hyperparams)
     rf_regressor.fit(X_train, y_train)
     
-    # Make predictions
     y_pred_test = rf_regressor.predict(X_test)
     y_pred_train = rf_regressor.predict(X_train)
     
-    # Calculate metrics
     train_mse = mean_squared_error(y_train, y_pred_train)
     test_mse = mean_squared_error(y_test, y_pred_test)
     train_r2 = r2_score(y_train, y_pred_train)
     test_r2 = r2_score(y_test, y_pred_test)
     
-    # Feature importance
     importances = rf_regressor.feature_importances_
     feature_importance_df = pd.DataFrame({
         'Feature': features.columns,
         'Importance': importances
     }).sort_values('Importance', ascending=False)
     
-    # Create model record
     model_record = {
         'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         'dataset': dataset_name,
@@ -166,7 +208,6 @@ def train_and_evaluate_model(data_log, hyperparams, dataset_name):
         'y_pred_test': y_pred_test
     }
     
-    # Add to history
     st.session_state.model_history.append(model_record)
     st.session_state.current_model = model_record
     
@@ -174,217 +215,216 @@ def train_and_evaluate_model(data_log, hyperparams, dataset_name):
 
 def display_model_results(results):
     """Display model results in a standardized way"""
-    # Display results
-    st.subheader("📊 Model Performance")
+    st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+    st.subheader("📊 " + get_text("model_results", "model_performance"))
     
-    # Metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Train MSE", f"{results['metrics']['train_mse']:.4f}")
+        st.markdown('</div>', unsafe_allow_html=True)
     with col2:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Test MSE", f"{results['metrics']['test_mse']:.4f}")
+        st.markdown('</div>', unsafe_allow_html=True)
     with col3:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Train R²", f"{results['metrics']['train_r2']:.4f}")
+        st.markdown('</div>', unsafe_allow_html=True)
     with col4:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Test R²", f"{results['metrics']['test_r2']:.4f}")
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Feature importance
-    st.subheader("🔍 Feature Importance")
+    st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+    st.subheader("🔍 " + get_text("model_results", "feature_importance"))
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        # Plot feature importance
         fig, ax = plt.subplots(figsize=(10, 6))
         top_features = results['feature_importance'].head(10)
-        sns.barplot(data=top_features, x='Importance', y='Feature', ax=ax)
-        ax.set_title('Top 10 Most Important Features')
-        ax.set_xlabel('Importance')
-        ax.set_ylabel('Features')
+        
+        # Fixed seaborn barplot with proper parameters
+        colors_list = plt.cm.Greens(np.linspace(0.4, 0.8, len(top_features))).tolist()
+        sns.barplot(
+            data=top_features, 
+            x='Importance', 
+            y='Feature', 
+            hue='Feature',
+            ax=ax, 
+            palette=colors_list,
+            legend=False,
+            saturation=0.8
+        )
+        
+        ax.set_title("Top 10 Most Important Features", fontsize=14, pad=20)
+        ax.set_xlabel("Importance")
+        ax.set_ylabel("Features")
+        ax.grid(True, alpha=0.3, axis='x')
+        ax.set_axisbelow(True)
+        
         st.pyplot(fig)
     
     with col2:
-        st.dataframe(results['feature_importance'].head(10))
+        display_df = safe_dataframe_display(results['feature_importance'].head(10))
+        st.dataframe(display_df, width='content')
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Actual vs Predicted plot
-    st.subheader("📈 Actual vs Predicted Values")
+    st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+    st.subheader("📈 " + get_text("model_results", "actual_vs_predicted"))
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
     
-    # Training set
-    ax1.scatter(results['y_train'], results['y_pred_train'], alpha=0.5)
+    # Training set plot - normal styling
+    ax1.scatter(results['y_train'], results['y_pred_train'], alpha=0.6, color='#2d5016')
     ax1.plot([results['y_train'].min(), results['y_train'].max()], 
-            [results['y_train'].min(), results['y_train'].max()], 'r--', lw=2)
-    ax1.set_xlabel('Actual')
-    ax1.set_ylabel('Predicted')
-    ax1.set_title('Training Set')
+            [results['y_train'].min(), results['y_train'].max()], 'r--', lw=2, alpha=0.8)
+    ax1.set_xlabel(get_text("model_results", "actual"))
+    ax1.set_ylabel(get_text("model_results", "predicted"))
+    ax1.set_title("Training Set")
+    ax1.grid(True, alpha=0.3)
     
-    # Test set
-    ax2.scatter(results['y_test'], results['y_pred_test'], alpha=0.5)
+    # Test set plot - normal styling
+    ax2.scatter(results['y_test'], results['y_pred_test'], alpha=0.6, color='#4a7c3a')
     ax2.plot([results['y_test'].min(), results['y_test'].max()], 
-            [results['y_test'].min(), results['y_test'].max()], 'r--', lw=2)
-    ax2.set_xlabel('Actual')
-    ax2.set_ylabel('Predicted')
-    ax2.set_title('Test Set')
+            [results['y_test'].min(), results['y_test'].max()], 'r--', lw=2, alpha=0.8)
+    ax2.set_xlabel(get_text("model_results", "actual"))
+    ax2.set_ylabel(get_text("model_results", "predicted"))
+    ax2.set_title("Test Set")
+    ax2.grid(True, alpha=0.3)
     
+    plt.tight_layout()
     st.pyplot(fig)
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Current hyperparameters
-    st.subheader("⚙️ Hyperparameters Used")
+    st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+    st.subheader("⚙️ " + get_text("model_results", "hyperparameters_used"))
     st.json(results['hyperparameters'])
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def main_page():
     """Main training page"""
-    st.title("🌳 RandomForest GHG Emissions Predictor")
-    st.markdown("""
-    This app allows you to tune hyperparameters for the RandomForest regressor 
-    that predicts GHG emissions based on economic and energy data.
-    """)
+    create_header(
+        get_text("main_page", "title"),
+        get_text("main_page", "description")
+    )
     
-    # Load data
     pxp_df, ixi_df = load_data()
-    
     if pxp_df is None or ixi_df is None:
         return
     
-    # Dataset selection
-    st.sidebar.header("📊 Dataset Selection")
+    st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+    st.sidebar.markdown("### 📊 " + get_text("sidebar", "dataset_selection"))
     dataset_choice = st.sidebar.radio(
-        "Choose dataset:",
+        get_text("sidebar", "choose_dataset"),
         ["PxP (Process x Process)", "IxI (Industry x Industry)"],
         key="dataset_radio",
-        help="PxP: Process-level data, IxI: Industry-level data"
+        help=f"{get_text('sidebar', 'pxp_description')}, {get_text('sidebar', 'ixi_description')}"
     )
     
     selected_data = pxp_df if dataset_choice == "PxP (Process x Process)" else ixi_df
     dataset_name = "PxP" if dataset_choice == "PxP (Process x Process)" else "IxI"
     
-    # Display dataset info
-    st.subheader("📈 Dataset Overview")
+    st.subheader("📊 " + get_text("main_page", "dataset_overview"))
     col1, col2 = st.columns(2)
     
     with col1:
-        st.write(f"**Selected Dataset:** {dataset_choice}")
-        st.write(f"**Shape:** {selected_data.shape}")
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, #f8fff0 0%, #f0f7e6 100%); 
+                    padding: 1rem; border-radius: 10px; border-left: 4px solid #4a7c3a;'>
+            <h4 style='color: #2d5016; margin: 0;'>Dataset Information</h4>
+            <p style='color: #2d5016; margin: 0.5rem 0;'><strong>Selected:</strong> {dataset_choice}</p>
+            <p style='color: #2d5016; margin: 0;'><strong>Shape:</strong> {selected_data.shape}</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        if st.checkbox("Show raw data", key="show_raw_data"):
-            st.dataframe(selected_data.head())
+        if st.checkbox("📋 " + get_text("main_page", "show_raw_data"), key="show_raw_data"):
+            display_data = safe_dataframe_display(selected_data)
+            st.dataframe(display_data, width='content')
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Preprocess data
     data_log = preprocess_data(selected_data)
 
-    # Hyperparameter tuning sidebar
-    st.sidebar.header("🎛️ Hyperparameter Tuning")
+    st.sidebar.markdown("### 🎛️ " + get_text("sidebar", "hyperparameter_tuning"))
 
     n_estimators = st.sidebar.slider(
-        "Number of Trees (n_estimators)",
-        min_value=10,
-        max_value=500,
-        value=100,
-        step=10,
-        key="n_estimators",
-        help="Number of trees in the forest"
+        get_text("sidebar", "n_estimators_label"),
+        min_value=10, max_value=500, value=100, step=10,
+        key="n_estimators", help=get_text("sidebar", "n_estimators_help")
     )
 
     max_depth_none = st.sidebar.checkbox(
-        "Unlimited Max Depth (None)",
-        value=False,
-        key="unlimited_depth",
-        help="If checked, trees will grow until all leaves are pure"
+        get_text("sidebar", "unlimited_depth"), value=False,
+        key="unlimited_depth", help=get_text("sidebar", "unlimited_depth_help")
     )
 
     if max_depth_none:
         max_depth = None
-        st.sidebar.info("Max Depth set to None (unlimited)")
+        st.sidebar.success(get_text("common", "max_depth_set"))
     else:
         max_depth = st.sidebar.slider(
-            "Max Depth",
-            min_value=1,
-            max_value=50,
-            value=10,
-            key="max_depth",
-            help="Maximum depth of the tree"
+            get_text("sidebar", "max_depth_label"), min_value=1, max_value=50, value=10,
+            key="max_depth", help=get_text("sidebar", "max_depth_help")
         )
 
     min_samples_split = st.sidebar.slider(
-        "Min Samples Split",
-        min_value=2,
-        max_value=20,
-        value=2,
-        key="min_samples_split",
-        help="Minimum number of samples required to split an internal node"
+        get_text("sidebar", "min_samples_split"), min_value=2, max_value=20, value=2,
+        key="min_samples_split", help=get_text("sidebar", "min_samples_split_help")
     )
 
     min_samples_leaf = st.sidebar.slider(
-        "Min Samples Leaf",
-        min_value=1,
-        max_value=10,
-        value=1,
-        key="min_samples_leaf",
-        help="Minimum number of samples required to be at a leaf node"
+        get_text("sidebar", "min_samples_leaf"), min_value=1, max_value=10, value=1,
+        key="min_samples_leaf", help=get_text("sidebar", "min_samples_leaf_help")
     )
 
     max_features = st.sidebar.selectbox(
-        "Max Features",
-        options=['sqrt', 'log2', None],
-        index=0,
-        key="max_features",
-        help="Number of features to consider when looking for the best split"
+        get_text("sidebar", "max_features"), options=['sqrt', 'log2', None], index=0,
+        key="max_features", help=get_text("sidebar", "max_features_help")
     )
 
     bootstrap = st.sidebar.checkbox(
-        "Bootstrap",
-        value=True,
-        key="bootstrap",
-        help="Whether bootstrap samples are used when building trees"
+        get_text("sidebar", "bootstrap"), value=True,
+        key="bootstrap", help=get_text("sidebar", "bootstrap_help")
     )
     
-    # Hyperparameters dictionary
     hyperparams = {
-        'n_estimators': n_estimators,
-        'max_depth': max_depth,
-        'min_samples_split': min_samples_split,
-        'min_samples_leaf': min_samples_leaf,
-        'max_features': max_features,
-        'bootstrap': bootstrap,
-        'random_state': 42,
-        'n_jobs': -1
+        'n_estimators': n_estimators, 'max_depth': max_depth,
+        'min_samples_split': min_samples_split, 'min_samples_leaf': min_samples_leaf,
+        'max_features': max_features, 'bootstrap': bootstrap,
+        'random_state': 42, 'n_jobs': -1
     }
     
-    # Train model button
-    if st.sidebar.button("🚀 Train Model", type="primary", key="train_button"):
-        with st.spinner("Training model... This may take a few moments."):
+    if st.sidebar.button("🚀 " + get_text("sidebar", "train_model"), type="primary", key="train_button"):
+        with st.spinner(get_text("common", "training_model")):
             results = train_and_evaluate_model(data_log, hyperparams, dataset_name)
             display_model_results(results)
 
-    # Display current model if exists
     if st.session_state.current_model:
-        st.sidebar.success(f"Last trained: {st.session_state.current_model['timestamp']}")
+        st.sidebar.success(f"✅ {get_text('sidebar', 'last_trained')}: {st.session_state.current_model['timestamp']}")
 
 def history_page():
     """Model history page"""
-    st.title("📊 Model History")
-    st.markdown("""
-    View all previously trained models, their hyperparameters, and performance metrics.
-    """)
+    create_header(
+        get_text("history_page", "title"),
+        get_text("history_page", "description")
+    )
     
     if not st.session_state.model_history:
-        st.info("No models have been trained yet. Go to the main page to train your first model!")
+        st.info(get_text("history_page", "no_models"))
         return
     
-    # Display summary table
-    st.subheader("📋 Training History Summary")
+    st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+    st.subheader("📋 " + get_text("history_page", "training_history"))
     
-    # Create summary dataframe
     history_data = []
     for i, model in enumerate(st.session_state.model_history):
         history_data.append({
-            'Model ID': i + 1,
-            'Timestamp': model['timestamp'],
-            'Dataset': model['dataset'],
+            'Model ID': i + 1, 'Timestamp': model['timestamp'], 'Dataset': model['dataset'],
             'n_estimators': model['hyperparameters']['n_estimators'],
-            'max_depth': model['hyperparameters']['max_depth'],
+            'max_depth': str(model['hyperparameters']['max_depth']),
             'Train MSE': f"{model['metrics']['train_mse']:.4f}",
             'Test MSE': f"{model['metrics']['test_mse']:.4f}",
             'Train R²': f"{model['metrics']['train_r2']:.4f}",
@@ -392,37 +432,39 @@ def history_page():
         })
     
     history_df = pd.DataFrame(history_data)
-    st.dataframe(history_df, use_container_width=True)
+    for col in history_df.columns:
+        history_df[col] = history_df[col].astype(str)
     
-    # Model selection for detailed view
-    st.subheader("🔍 Detailed Model View")
+    st.dataframe(history_df, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+    st.subheader("🔍 " + get_text("history_page", "detailed_view"))
     model_options = [f"Model {i+1} - {model['timestamp']} - {model['dataset']}" 
                     for i, model in enumerate(st.session_state.model_history)]
     
     selected_model_idx = st.selectbox(
-        "Select a model to view details:",
-        range(len(model_options)),
-        format_func=lambda x: model_options[x],
-        key="model_selector"
+        get_text("history_page", "select_model"), range(len(model_options)),
+        format_func=lambda x: model_options[x], key="model_selector"
     )
     
     if selected_model_idx is not None:
         selected_model = st.session_state.model_history[selected_model_idx]
         
-        # Display model details in tabs
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 Performance", "⚙️ Hyperparameters", "📈 Feature Importance", "🔄 Actual vs Predicted"])
+        tab1, tab2, tab3, tab4 = st.tabs([
+            "Performance",
+            "Hyperparameters", 
+            "Feature Importance", 
+            "Actual vs Predicted"
+        ])
         
         with tab1:
             st.subheader("Model Performance Metrics")
             col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.metric("Train MSE", f"{selected_model['metrics']['train_mse']:.4f}")
-            with col2:
-                st.metric("Test MSE", f"{selected_model['metrics']['test_mse']:.4f}")
-            with col3:
-                st.metric("Train R²", f"{selected_model['metrics']['train_r2']:.4f}")
-            with col4:
-                st.metric("Test R²", f"{selected_model['metrics']['test_r2']:.4f}")
+            with col1: st.metric(get_text("model_results", "train_mse"), f"{selected_model['metrics']['train_mse']:.4f}")
+            with col2: st.metric(get_text("model_results", "test_mse"), f"{selected_model['metrics']['test_mse']:.4f}")
+            with col3: st.metric(get_text("model_results", "train_r2"), f"{selected_model['metrics']['train_r2']:.4f}")
+            with col4: st.metric(get_text("model_results", "test_r2"), f"{selected_model['metrics']['test_r2']:.4f}")
             
             st.write(f"**Dataset:** {selected_model['dataset']}")
             st.write(f"**Training Time:** {selected_model['timestamp']}")
@@ -435,108 +477,114 @@ def history_page():
             st.subheader("Feature Importance")
             fig, ax = plt.subplots(figsize=(10, 6))
             top_features = selected_model['feature_importance'].head(10)
-            sns.barplot(data=top_features, x='Importance', y='Feature', ax=ax)
-            ax.set_title('Top 10 Most Important Features')
-            st.pyplot(fig)
             
-            st.subheader("Feature Importance Table")
-            st.dataframe(selected_model['feature_importance'])
+            colors_list = plt.cm.Greens(np.linspace(0.4, 0.8, len(top_features))).tolist()
+            sns.barplot(
+                data=top_features, 
+                x='Importance', 
+                y='Feature', 
+                hue='Feature',
+                ax=ax, 
+                palette=colors_list,
+                legend=False,
+                saturation=0.8
+            )
+            ax.set_title("Top 10 Most Important Features")
+            st.pyplot(fig)
+            st.dataframe(selected_model['feature_importance'], width='content')
         
         with tab4:
             st.subheader("Actual vs Predicted Values")
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
             
-            # Training set
-            ax1.scatter(selected_model['y_train'], selected_model['y_pred_train'], alpha=0.5)
+            ax1.scatter(selected_model['y_train'], selected_model['y_pred_train'], alpha=0.5, color='#2d5016')
             ax1.plot([selected_model['y_train'].min(), selected_model['y_train'].max()], 
                     [selected_model['y_train'].min(), selected_model['y_train'].max()], 'r--', lw=2)
-            ax1.set_xlabel('Actual')
-            ax1.set_ylabel('Predicted')
-            ax1.set_title('Training Set')
+            ax1.set_xlabel(get_text("model_results", "actual"))
+            ax1.set_ylabel(get_text("model_results", "predicted"))
+            ax1.set_title("Training Set")
+            ax1.grid(True, alpha=0.3)
             
-            # Test set
-            ax2.scatter(selected_model['y_test'], selected_model['y_pred_test'], alpha=0.5)
+            ax2.scatter(selected_model['y_test'], selected_model['y_pred_test'], alpha=0.5, color='#4a7c3a')
             ax2.plot([selected_model['y_test'].min(), selected_model['y_test'].max()], 
                     [selected_model['y_test'].min(), selected_model['y_test'].max()], 'r--', lw=2)
-            ax2.set_xlabel('Actual')
-            ax2.set_ylabel('Predicted')
-            ax2.set_title('Test Set')
+            ax2.set_xlabel(get_text("model_results", "actual"))
+            ax2.set_ylabel(get_text("model_results", "predicted"))
+            ax2.set_title("Test Set")
+            ax2.grid(True, alpha=0.3)
             
+            plt.tight_layout()
             st.pyplot(fig)
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Clear history button
-    st.sidebar.header("🗑️ Management")
-    if st.sidebar.button("Clear All History", key="clear_history"):
+    st.sidebar.header(get_text("sidebar", "management"))
+    if st.sidebar.button(get_text("sidebar", "clear_history"), key="clear_history"):
         st.session_state.model_history = []
         st.session_state.current_model = None
         st.rerun()
 
 def visualizations_page():
     """Dedicated visualizations page"""
-    st.title("📊 Data Visualizations")
-    st.markdown("""
-    Explore the dataset through comprehensive visualizations including data distributions 
-    and correlation analysis.
-    """)
+    create_header(
+        get_text("visualizations_page", "title"),
+        get_text("visualizations_page", "description")
+    )
     
-    # Load data
     pxp_df, ixi_df = load_data()
-    
     if pxp_df is None or ixi_df is None:
         return
     
-    # Dataset selection
-    st.sidebar.header("📊 Dataset Selection")
+    st.sidebar.header(get_text("sidebar", "dataset_selection"))
     dataset_choice = st.sidebar.radio(
-        "Choose dataset:",
+        get_text("sidebar", "choose_dataset"),
         ["PxP (Process x Process)", "IxI (Industry x Industry)"],
         key="viz_dataset_radio",
-        help="PxP: Process-level data, IxI: Industry-level data"
+        help=f"{get_text('sidebar', 'pxp_description')}, {get_text('sidebar', 'ixi_description')}"
     )
     
     selected_data = pxp_df if dataset_choice == "PxP (Process x Process)" else ixi_df
     
-    # Display dataset info
-    st.subheader("📈 Dataset Overview")
+    st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+    st.subheader("📈 " + get_text("main_page", "dataset_overview"))
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.write(f"**Selected Dataset:** {dataset_choice}")
-        st.write(f"**Shape:** {selected_data.shape}")
+        st.write(f"**{get_text('main_page', 'selected_dataset')}:** {dataset_choice}")
+        st.write(f"**{get_text('main_page', 'shape')}:** {selected_data.shape}")
     
     with col2:
-        st.write(f"**Number of Features:** {len(selected_data.columns)}")
-        st.write(f"**Number of Samples:** {len(selected_data)}")
+        st.write(f"**{get_text('visualizations_page', 'num_features')}:** {len(selected_data.columns)}")
+        st.write(f"**{get_text('visualizations_page', 'num_samples')}:** {len(selected_data)}")
     
     with col3:
-        if st.checkbox("Show dataset info", key="viz_show_info"):
-            st.write("**Columns:**")
+        if st.checkbox(get_text("visualizations_page", "show_info"), key="viz_show_info"):
+            st.write(f"**{get_text('visualizations_page', 'columns')}:**")
             for col in selected_data.columns:
                 st.write(f"- {col}")
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Preprocess data
     data_log = preprocess_data(selected_data)
     
-    # Create tabs for different visualizations
-    tab1, tab2, tab3 = st.tabs(["📈 Data Distributions", "🔗 Correlation Matrix", "📋 Raw Data"])
+    tab1, tab2, tab3 = st.tabs([
+        "Data Distributions", 
+        "Correlation Matrix", 
+        "Raw Data"
+    ])
     
     with tab1:
-        st.subheader("📊 Log-Transformed Data Distributions")
+        st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+        st.subheader("Log-Transformed Data Distributions")
         
         columns_to_transform = [
-            'Value Added [M.EUR]', 
-            'Employment [1000 p.]', 
-            'GHG emissions [kg CO2 eq.]', 
-            'Energy Carrier Net Total [TJ]'
+            'Value Added [M.EUR]', 'Employment [1000 p.]', 
+            'GHG emissions [kg CO2 eq.]', 'Energy Carrier Net Total [TJ]'
         ]
         
-        # Check which columns exist in the data
         existing_columns = [col for col in columns_to_transform if col in data_log.columns]
         
         if not existing_columns:
-            st.warning("No transformable columns found in the dataset.")
+            st.warning(get_text("visualizations_page", "no_transformable"))
         else:
-            # Create distribution plots
             n_cols = 2
             n_rows = (len(existing_columns) + n_cols - 1) // n_cols
             
@@ -548,58 +596,54 @@ def visualizations_page():
             
             for i, column in enumerate(existing_columns):
                 if i < len(axes):
-                    sns.histplot(data_log[column], kde=True, ax=axes[i])
+                    sns.histplot(data_log[column], kde=True, ax=axes[i], color='#2d5016')
                     axes[i].set_title(f'Log-Transformed {column}')
                     axes[i].set_xlabel(column)
                     axes[i].set_ylabel('Frequency')
             
-            # Hide empty subplots
             for i in range(len(existing_columns), len(axes)):
                 axes[i].set_visible(False)
             
             plt.tight_layout()
             st.pyplot(fig)
             
-            # Show statistics
-            st.subheader("📊 Descriptive Statistics")
-            st.dataframe(data_log[existing_columns].describe())
+            st.subheader("Descriptive Statistics")
+            stats_df = safe_dataframe_display(data_log[existing_columns].describe())
+            st.dataframe(stats_df, width='content')
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with tab2:
-        st.subheader("🔗 Correlation Matrix")
+        st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+        st.subheader("Correlation Matrix")
         
         columns_to_transform = [
-            'Value Added [M.EUR]', 
-            'Employment [1000 p.]', 
-            'GHG emissions [kg CO2 eq.]', 
-            'Energy Carrier Net Total [TJ]'
+            'Value Added [M.EUR]', 'Employment [1000 p.]', 
+            'GHG emissions [kg CO2 eq.]', 'Energy Carrier Net Total [TJ]'
         ]
         
-        # Filter only columns that exist in the data
         existing_columns = [col for col in columns_to_transform if col in data_log.columns]
         
         if len(existing_columns) < 2:
-            st.warning("Need at least 2 columns to create a correlation matrix.")
+            st.warning(get_text("visualizations_page", "need_columns"))
         else:
             correlation_matrix = data_log[existing_columns].corr()
             
             fig, ax = plt.subplots(figsize=(10, 8))
             sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0, 
-                       fmt='.2f', square=True, ax=ax)
-            ax.set_title('Correlation Matrix of Log-Transformed Data')
+                       fmt='.2f', square=True, ax=ax, cbar_kws={'shrink': 0.8})
+            ax.set_title("Correlation Matrix of Log-Transformed Data")
             st.pyplot(fig)
             
-            # Correlation insights
-            st.subheader("🔍 Correlation Insights")
+            st.subheader("Correlation Insights")
             
-            # Find strongest correlations
             corr_matrix = correlation_matrix.copy()
-            np.fill_diagonal(corr_matrix.values, 0)  # Remove diagonal
+            np.fill_diagonal(corr_matrix.values, 0)
             
             strong_correlations = []
             for i in range(len(corr_matrix.columns)):
                 for j in range(i+1, len(corr_matrix.columns)):
                     corr_value = corr_matrix.iloc[i, j]
-                    if abs(corr_value) > 0.5:  # Threshold for strong correlation
+                    if abs(corr_value) > 0.5:
                         strong_correlations.append({
                             'Variable 1': corr_matrix.columns[i],
                             'Variable 2': corr_matrix.columns[j],
@@ -609,27 +653,29 @@ def visualizations_page():
             if strong_correlations:
                 st.write("**Strong Correlations (|r| > 0.5):**")
                 strong_corr_df = pd.DataFrame(strong_correlations)
-                st.dataframe(strong_corr_df.sort_values('Correlation', key=abs, ascending=False))
+                strong_corr_df = strong_corr_df.astype(str)
+                st.dataframe(strong_corr_df.sort_values('Correlation', key=lambda x: x.astype(float).abs(), ascending=False), width='content')
             else:
-                st.info("No strong correlations (|r| > 0.5) found between variables.")
+                st.info(get_text("visualizations_page", "no_strong_correlations"))
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with tab3:
-        st.subheader("📋 Raw Data Exploration")
+        st.markdown('<div class="forest-card">', unsafe_allow_html=True)
+        st.subheader("Raw Data Exploration")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            show_raw = st.checkbox("Show raw data", key="viz_show_raw")
-            if show_raw:
-                st.dataframe(selected_data)
+            if st.checkbox(get_text("visualizations_page", "show_raw"), key="viz_show_raw"):
+                display_data = safe_dataframe_display(selected_data)
+                st.dataframe(display_data, width='content')
         
         with col2:
-            show_log = st.checkbox("Show log-transformed data", key="viz_show_log")
-            if show_log:
-                st.dataframe(data_log)
+            if st.checkbox(get_text("visualizations_page", "show_log"), key="viz_show_log"):
+                display_data = safe_dataframe_display(data_log)
+                st.dataframe(display_data, width='content')
         
-        # Data information
-        st.subheader("📋 Data Information")
+        st.subheader("Data Information")
         
         info_col1, info_col2 = st.columns(2)
         
@@ -637,7 +683,8 @@ def visualizations_page():
             st.write("**Data Types:**")
             dtype_info = selected_data.dtypes.reset_index()
             dtype_info.columns = ['Column', 'Data Type']
-            st.dataframe(dtype_info, hide_index=True)
+            dtype_info['Data Type'] = dtype_info['Data Type'].astype(str)
+            st.dataframe(dtype_info, hide_index=True, width='content')
         
         with info_col2:
             st.write("**Missing Values:**")
@@ -645,16 +692,15 @@ def visualizations_page():
             missing_info.columns = ['Column', 'Missing Values']
             missing_info = missing_info[missing_info['Missing Values'] > 0]
             if len(missing_info) > 0:
-                st.dataframe(missing_info, hide_index=True)
+                missing_info = missing_info.astype(str)
+                st.dataframe(missing_info, hide_index=True, width='content')
             else:
-                st.success("No missing values found in the dataset!")
+                st.success(get_text("visualizations_page", "no_missing"))
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# Main app logic
 def main():
-    # Display navbar
     create_navbar()
     
-    # Page routing based on navbar selection
     if st.session_state.current_page == "main":
         main_page()
     elif st.session_state.current_page == "history":

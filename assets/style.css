@@ -1,0 +1,302 @@
+/* assets/style.css - Dark Forest Theme */
+
+/* Dark theme color palette */
+:root {
+    --forest-dark: #1a2e0f;
+    --forest-medium: #2d5016;
+    --forest-light: #3a6620;
+    --forest-accent: #4a7c3a;
+    --forest-bright: #5d944c;
+    --earth-brown: #5a4a36;
+    --sky-blue: #6ba8c9;
+    --text-light: #e8f4d8;
+    --text-muted: #b8d0a3;
+    --bg-dark: #0f1a08;
+    --bg-card: #15210d;
+    --bg-sidebar: #1a2e0f;
+}
+
+/* Base dark theme */
+html, body, .main, .stApp {
+    background-color: var(--bg-dark) !important;
+    color: var(--text-light) !important;
+}
+
+/* Header styling - Dark version */
+.main-header {
+    background: linear-gradient(135deg, var(--forest-dark) 0%, var(--forest-medium) 100%) !important;
+    color: var(--text-light) !important;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    border-left: 5px solid var(--forest-accent);
+}
+
+.main-header h1 {
+    color: var(--text-light) !important;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.main-header p {
+    color: var(--text-muted) !important;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Navigation bar - Dark version */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, var(--forest-medium) 0%, var(--forest-light) 100%) !important;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--forest-accent);
+}
+
+/* Cards and containers - Dark version */
+.forest-card {
+    background: var(--bg-card) !important;
+    color: var(--text-light) !important;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid var(--forest-accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 1rem;
+    border: 1px solid var(--forest-medium);
+}
+
+.metric-card {
+    background: linear-gradient(135deg, #1a2e0f 0%, #15210d 100%) !important;
+    color: var(--text-light) !important;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--forest-accent);
+    text-align: center;
+}
+
+/* Sidebar styling - Dark version */
+.css-1d391kg, .css-1lcbmhc, .sidebar .sidebar-content {
+    background: linear-gradient(180deg, var(--bg-sidebar) 0%, var(--forest-dark) 100%) !important;
+    color: var(--text-light) !important;
+}
+
+/* Button styling - Dark version */
+.stButton>button {
+    background: linear-gradient(135deg, var(--forest-medium) 0%, var(--forest-dark) 100%) !important;
+    color: var(--text-light) !important;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 1px solid var(--forest-accent);
+}
+
+.stButton>button:hover {
+    background: linear-gradient(135deg, var(--forest-light) 0%, var(--forest-medium) 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 124, 58, 0.3);
+}
+
+.stButton>button:active {
+    transform: translateY(0);
+}
+
+/* Primary button - Train Model */
+div[data-testid="stButton"] button[kind="primary"] {
+    background: linear-gradient(135deg, #ff6b35 0%, #c44512 100%) !important;
+    border: 1px solid #ff8c5a;
+    color: white !important;
+}
+
+div[data-testid="stButton"] button[kind="primary"]:hover {
+    background: linear-gradient(135deg, #c44512 0%, #9a3410 100%) !important;
+}
+
+/* Secondary button */
+div[data-testid="stButton"] button[kind="secondary"] {
+    background: linear-gradient(135deg, var(--forest-light) 0%, var(--forest-medium) 100%) !important;
+    color: var(--text-light) !important;
+}
+
+/* Slider styling - Dark version */
+.stSlider>div>div>div {
+    background: linear-gradient(90deg, var(--forest-light) 0%, var(--forest-accent) 100%) !important;
+}
+
+.stSlider>div>div>div>div {
+    background: var(--forest-bright) !important;
+}
+
+/* Selectbox and radio buttons - Dark version */
+.stSelectbox>div>div, .stRadio>div {
+    background: var(--bg-card) !important;
+    color: var(--text-light) !important;
+    border: 1px solid var(--forest-light);
+    border-radius: 8px;
+}
+
+.stSelectbox>div>div>div, .stRadio>div>label {
+    color: var(--text-light) !important;
+}
+
+/* Checkbox styling - Dark version */
+.stCheckbox>div>label {
+    color: var(--text-light) !important;
+    font-weight: 500;
+}
+
+.stCheckbox>div>div>div {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--forest-light) !important;
+}
+
+/* Success messages - Dark version */
+.stSuccess {
+    background: linear-gradient(135deg, #1e3a1e 0%, #2d5016 100%) !important;
+    border: 1px solid var(--forest-light);
+    color: var(--text-light) !important;
+    border-radius: 8px;
+}
+
+/* Info messages - Dark version */
+.stInfo {
+    background: linear-gradient(135deg, #1a2e3a 0%, #2d4a50 100%) !important;
+    border: 1px solid var(--sky-blue);
+    color: var(--text-light) !important;
+    border-radius: 8px;
+}
+
+/* Tabs styling - Dark version */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 2px;
+    background-color: var(--forest-dark);
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 50px;
+    white-space: pre-wrap;
+    background-color: var(--forest-medium);
+    border-radius: 6px;
+    gap: 8px;
+    padding: 8px 16px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: var(--forest-accent) !important;
+    color: var(--text-light) !important;
+}
+
+/* Dataframe styling - Dark version */
+.dataframe {
+    border: 1px solid var(--forest-light) !important;
+    border-radius: 8px;
+    background: var(--bg-card) !important;
+}
+
+/* Ensure dataframe text is readable */
+.dataframe table {
+    color: var(--text-light) !important;
+}
+
+.dataframe th, .dataframe td {
+    color: var(--text-light) !important;
+    background: var(--bg-card) !important;
+    border-color: var(--forest-light) !important;
+}
+
+/* Language switcher special styling */
+.language-switcher {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Section headers */
+.section-header {
+    color: var(--text-light);
+    border-bottom: 2px solid var(--forest-accent);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+/* Text elements */
+.stMarkdown, .stText, .stHeader, .stSubheader {
+    color: var(--text-light) !important;
+}
+
+.stMarkdown p, .stMarkdown li {
+    color: var(--text-muted) !important;
+}
+
+/* Streamlit specific elements */
+.streamlit-expanderHeader {
+    background: var(--bg-card) !important;
+    color: var(--text-light) !important;
+    border: 1px solid var(--forest-light) !important;
+}
+
+.streamlit-expanderContent {
+    background: var(--bg-dark) !important;
+    color: var(--text-light) !important;
+}
+
+/* JSON display */
+.json-viewer {
+    background: var(--bg-card) !important;
+    color: var(--text-light) !important;
+}
+
+/* Force dark theme meta properties */
+html {
+    color-scheme: dark !important;
+}
+
+body {
+    background-color: var(--bg-dark) !important;
+    color: var(--text-light) !important;
+}
+
+/* Dark Reader compatibility */
+[data-darkreader-scheme="dark"] {
+    color-scheme: dark !important;
+}
+
+/* Ensure all Streamlit containers are dark */
+.main .block-container {
+    background-color: var(--bg-dark) !important;
+    color: var(--text-light) !important;
+}
+
+/* Plot background fix */
+.js-plotly-plot .plotly, .modebar {
+    background: var(--bg-card) !important;
+}
+
+/* Matplotlib figure background */
+.figure {
+    background: var(--bg-card) !important;
+}
+
+/* Additional dark theme enhancements */
+.stNumberInput>div>div>input, .stTextInput>div>div>input, .stTextArea>div>div>textarea {
+    background: var(--bg-card) !important;
+    color: var(--text-light) !important;
+    border: 1px solid var(--forest-light) !important;
+}
+
+.stNumberInput>div>div>input:focus, .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
+    border-color: var(--forest-accent) !important;
+}
