@@ -1,12 +1,11 @@
-# 📘 Projeto: Sistemas de Detecção e Controle de Zoonoses
+# 🌲 Forest GHG Emissions Predictor
 
-Este repositório contém o material desenvolvido para o projeto **Sistemas de Detecção e Controle de Zoonoses**, incluindo revisão teórica, metodologia, resultados esperados e artefatos complementares. O objetivo geral é analisar tecnologias e estratégias modernas usadas para monitorar, prever e controlar zoonoses, contribuindo para a saúde pública e para a prevenção de surtos.
+Uma aplicação web interativa construída com Streamlit para prever e analisar emissões de gases de efeito estufa (GHG) em setores florestais usando modelos de Random Forest.
 
 ---
+## 📋 Visão Geral
 
-## 📌 Objetivo do Projeto
-
-Desenvolver uma revisão estruturada sobre modelos, técnicas e sistemas aplicados na detecção e no controle de zoonoses, contemplando métodos computacionais, epidemiológicos e de vigilância.
+Este projeto implementa um sistema completo de machine learning para previsão de emissões de GHG baseado em dados de fatores de contabilidade da ExioML. A aplicação oferece uma interface amigável com múltiplos idiomas (Inglês e Português) para explorar dados, treinar modelos e visualizar resultados.cia.
 
 ---
 
@@ -18,17 +17,27 @@ Desenvolver uma revisão estruturada sobre modelos, técnicas e sistemas aplicad
 
 ---
 
-## 📝 Estrutura da Revisão
+## 📊 Páginas da Aplicação
 
-1. **Contextualização**: O impacto global das zoonoses e a importância dos sistemas de vigilância.  
-2. **Fundamentação Teórica**: Conceitos de epidemiologia, vigilância digital, IA e modelagem.  
-3. **Tecnologias e Sistemas**:  
-   - Modelos preditivos  
-   - Sistemas de alerta precoce  
-   - Redes de vigilância  
-   - Métodos de detecção baseados em IA  
-4. **Discussão**: Avanços, desafios, limitações e tendências.  
-5. **Conclusão**: Síntese das contribuições e perspectivas futuras.
+1. 🌲 Página Principal
+   
+     - Seleção de dataset
+     - Configuração de hiperparâmetros do modelo
+     - Treinamento e avaliação do modelo
+     - Visualização de importância de features
+
+2. 📊 Histórico de Modelos
+   
+   - Registro completo de todos os modelos treinados
+   - Comparação de métricas de desempenho
+   - Visualização detalhada por modelo
+
+3. 📈 Visualizações
+   
+   - Distribuições de dados transformados
+   - Matriz de correlação
+   - Análise exploratória de dados
+   - Estatísticas descritivas
 
 ---
 
