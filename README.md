@@ -1,62 +1,65 @@
-# 🌲 Forest GHG Emissions Predictor
+#  Forest GHG Emissions Predictor
 
-Uma aplicação web interativa construída com Streamlit para prever e analisar emissões de gases de efeito estufa (GHG) em setores florestais usando modelos de Random Forest.
-
----
-## 📋 Visão Geral
-
-Este projeto implementa um sistema completo de machine learning para previsão de emissões de GHG baseado em dados de fatores de contabilidade da ExioML. A aplicação oferece uma interface amigável com múltiplos idiomas (Inglês e Português) para explorar dados, treinar modelos e visualizar resultados.cia.
+An interactive web application built with Streamlit to predict and analyze greenhouse gas (GHG) emissions in forest sectors using Random Forest models.
 
 ---
+## Overview
 
-## 🧩 Conteúdo do Repositório
-- **app.py** – Script.
-- **/utils** – Notebook de analise de dados.  
-- **/data** – Bases de dados utilizadas (caso permitido).  
-- **README.md** – Documentação principal do projeto.
+This project implements a complete machine learning system for predicting GHG emissions based on accounting factors data from ExioML. The application offers a user-friendly interface with multiple languages (English and Portuguese) to explore data, train models, and visualize results.
 
 ---
 
-## 📊 Páginas da Aplicação
+## Repository Contents
+- **app.py** – Main Script.
+- **/utils** – Data analysis notebook.  
+- **/data** – Datasets used (if permitted).  
+- **README.md** – Main project documentation.
 
-1. 🌲 Página Principal
+---
+
+## Application Pages
+
+1. Main Page
    
-     - Seleção de dataset
-     - Configuração de hiperparâmetros do modelo
-     - Treinamento e avaliação do modelo
-     - Visualização de importância de features
+  -  Dataset selection
 
-2. 📊 Histórico de Modelos
-   
-   - Registro completo de todos os modelos treinados
-   - Comparação de métricas de desempenho
-   - Visualização detalhada por modelo
+ - Model hyperparameter configuration
 
-3. 📈 Visualizações
-   
-   - Distribuições de dados transformados
-   - Matriz de correlação
-   - Análise exploratória de dados
-   - Estatísticas descritivas
+ - Model training and evaluation
 
----
+ - Feature importance visualization
 
-## 🚀 Como Contribuir
+2. Model History
 
-1. Faça um fork do repositório  
-2. Crie uma branch para sua feature (`git checkout -b feature-nova`)  
-3. Commit suas alterações (`git commit -m "Descrição"`)  
-4. Envie a branch (`git push origin feature-nova`)  
-5. Abra um Pull Request
+ -   Complete record of all trained models
+
+ -   Performance metrics comparison
+
+ -   Detailed per-model visualization
+
+3. Visualizations
+
+ -   Transformed data distributions
+
+-   Correlation matrix
+
+ -   Exploratory data analysis
+
+-    Descriptive statistics
 
 ---
 
-## 📄 Licença
+## How to Contribute
 
-Este projeto está sob a licença MIT. Consulte o arquivo `LICENSE` para mais detalhes.
+   1. Fork the repository
+   2. Create a branch for your feature (git checkout -b new-feature)
+   3.Commit your changes (git commit -m "Description")
+   4. Push the branch (git push origin new-feature)
+   5. Open a Pull Request
+
 
 ---
 
-## 📫 Contato
+## Contact
 
-Se precisar de ajuda ou quiser tirar dúvidas, sinta-se à vontade para abrir uma issue no repositório.
+If you need help or have questions, feel free to open an issue in the repository.
