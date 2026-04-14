@@ -7,6 +7,8 @@ An interactive web application built with Streamlit to predict and analyze green
 
 This project implements a complete machine learning system for predicting GHG emissions based on accounting factors data from ExioML. The application offers a user-friendly interface with multiple languages (English and Portuguese) to explore data, train models, and visualize results.
 
+Link demo:
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://forest-ghg-emissions-predictor.streamlit.app/)
 ---
 
 ## Repository Contents
